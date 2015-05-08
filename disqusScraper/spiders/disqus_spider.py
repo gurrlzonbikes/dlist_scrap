@@ -4,10 +4,6 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from bs4 import BeautifulSoup
 import pdb
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from scrapy.item import Item, Field
 import re
 
@@ -18,7 +14,7 @@ class disqusItem(Item):
 
 class DisqusSpider(CrawlSpider):
     name = "disqus"
-    allowed_domains = ["dlisted.com"]
+    allowed_domains = ["dlisted.com", "disqus.com"]
     start_urls = [
         "http://dlisted.com/2015/"
     ]
@@ -41,7 +37,8 @@ class DisqusSpider(CrawlSpider):
         disqus_identifier = str(self.get_disqus_identifier(response))
         t_i = "&t_i=" + disqus_identifier + " http://dlisted.com/?p=" + disqus_identifier
         t_u = "&t_u=" + str(response.url)
-        return str(base_url + base_default + disqus_version + forum + disqus_identifier + t_i + t_u).replace("'", "")
+        t_e = "&t_e=" + str(response.selector.xpath("//h1/a/text()").extract()[0].encode("utf-8", "xmlcharrefreplace"))
+        return str(base_url + base_default + disqus_version + forum + t_i + t_u + t_e).replace("'", "")
 
 
     def get_disqus_identifier(self, response):
