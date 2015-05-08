@@ -50,3 +50,4 @@ crashlytics-build.properties
 
 spider_log.txt
 venv/
+*.json
