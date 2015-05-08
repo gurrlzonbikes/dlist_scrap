@@ -38,7 +38,7 @@ class DisqusSpider(CrawlSpider):
         t_i = "&t_i=" + disqus_identifier + " http://dlisted.com/?p=" + disqus_identifier
         t_u = "&t_u=" + str(response.url)
         t_e = "&t_e=" + str(response.selector.xpath("//h1/a/text()").extract()[0].encode("utf-8", "xmlcharrefreplace"))
-        return str(base_url + base_default + disqus_version + forum + t_i + t_u + t_e).replace("'", "")
+        return str(base_url + base_default + disqus_version + forum + t_i + t_u + t_e)
 
 
     def get_disqus_identifier(self, response):
