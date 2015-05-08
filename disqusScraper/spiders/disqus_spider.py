@@ -1,7 +1,7 @@
 __author__ = 'Tual'
 import scrapy
 from scrapy.contrib.spiders import CrawlSpider, Rule
-from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
+from scrapy.contrib.linkextractors.lxmlhtml import LxmlLinkExtractor
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
@@ -20,11 +20,10 @@ class DisqusSpider(CrawlSpider):
     start_urls = [
         "http://dlisted.com/2015/"
     ]
-    rules = (Rule(SgmlLinkExtractor(allow="[0-9]+\/[0-9]+"), callback='parse_url', follow=True), )
+    #restrict regex : [a-z0-9.-_]+\/[0-9]+\/[0-9]+\/[0-9]+\/[a-z-_]+\/$
+    rules = (Rule(LxmlLinkExtractor(), callback='parse_url', follow=True), )
 
     def parse_url(self, response):
-
-        #pdb.set_trace()
         try:
             disqus_url = self.build_disqus_url(response)
             yield scrapy.http.Request(disqus_url, self.parse_final_object, method='GET', encoding='utf-8', priority=0, dont_filter=False)
