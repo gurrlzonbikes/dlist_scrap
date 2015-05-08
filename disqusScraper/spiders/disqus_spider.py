@@ -20,14 +20,16 @@ class DisqusSpider(CrawlSpider):
     start_urls = [
         "http://dlisted.com/2015/"
     ]
-    rules = (Rule(SgmlLinkExtractor(allow="[0-9]+\/[0-9]+", restrict_xpaths=["//h1", "//div[@class='wp-pagenavi']"]), callback='parse_url', follow=True), )
+    rules = (Rule(SgmlLinkExtractor(allow="[0-9]+\/[0-9]+"), callback='parse_url', follow=True), )
 
     def parse_url(self, response):
-        disqus_url = self.build_disqus_url(response)
+
         #pdb.set_trace()
-        yield scrapy.http.Request(disqus_url, self.parse_final_object, method='GET', encoding='utf-8', priority=0, dont_filter=False)
-
-
+        try:
+            disqus_url = self.build_disqus_url(response)
+            yield scrapy.http.Request(disqus_url, self.parse_final_object, method='GET', encoding='utf-8', priority=0, dont_filter=False)
+        except IndexError:
+            pass
 
     def build_disqus_url(self, response):
         #Complete url example:
@@ -89,14 +91,3 @@ class DisqusSpider(CrawlSpider):
 
 #>>> body = '<html><body><span>good</span></body></html>'
 #>>> Selector(text=body).xpath('//span/text()').extract()
-
-
-
-
-
-
-
-
-
-
-
