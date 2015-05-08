@@ -15,7 +15,7 @@ NEWSPIDER_MODULE = 'disqusScraper.spiders'
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 USER_AGENT = 'disqusScraper (+http://www.yourdomain.com)'
-DOWNLOAD_DELAY = 10
+DOWNLOAD_DELAY = 0.25
 LOG_ENABLED = True
 #DOWNLOAD_HANDLERS = {
 #    's3': 'scrapy.core.downloader.handlers.s3.S3DownloadHandler'
@@ -27,3 +27,6 @@ LOG_FILE = 'spider_log.txt'
 #FEED_FORMAT = "jsonlines"
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'crawler_piwik (+http://www.yourdomain.com)'
+EXTENSIONS = {
+   'scrapy.telnet.TelnetConsole': None
+}

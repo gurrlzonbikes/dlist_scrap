@@ -3,10 +3,11 @@ import scrapy
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from bs4 import BeautifulSoup
+from selenium import webdriver
+from selenium.webdriver.common.action_chains import ActionChains
 import pdb
 import json
 from scrapy.item import Item, Field
-import re
 
 class disqusItem(Item):
     title = Field()
@@ -19,7 +20,7 @@ class DisqusSpider(CrawlSpider):
     start_urls = [
         "http://dlisted.com/2015/"
     ]
-    rules = (Rule(SgmlLinkExtractor(allow="[0-9]+\/[0-9]+"), callback='parse_url', follow=True), )
+    rules = (Rule(SgmlLinkExtractor(allow="[0-9]+\/[0-9]+", restrict_xpaths=["//h1", "//div[@class='wp-pagenavi']"]), callback='parse_url', follow=True), )
 
     def parse_url(self, response):
         disqus_url = self.build_disqus_url(response)
@@ -58,13 +59,36 @@ class DisqusSpider(CrawlSpider):
         json_data = response.selector.xpath("//script[@id='disqus-threadData']/text()").extract()
         #pdb.set_trace()
         item = disqusItem()
-        item['message'] = json.loads(json_data[0])
+        #item['message'] = json.loads(json_data[0])
+        item['message'] = response.url
         return item
         #plus qu'a remove les balises <script> ici
 
+    def open_with_selenium(self, url):
+        driver = webdriver.Chrome()
+        driver.get(url)
+        test = self.click_load_more()
+        pdb.set_trace()
+        driver.page_source
+
+        #//*[@id="posts"]/div[3]/a
+
+    def click_load_more(self, driver):
+        menu = driver.find_element_by_css_selector(".load-more")
+        hidden_submenu = driver.find_element_by_css_selector(".load-more .btn")
+        actions = ActionChains(driver)
+        actions.move_to_element(menu)
+        actions.click(hidden_submenu)
+        actions.perform()
+        isPresent = driver.find_element_by_xpath('//*[@id="posts"]/div[3]/a').size() > 0
+        while isPresent:
+            self.click_load_more(driver)
 
 
+##Using xpath with scrapy implementation
 
+#>>> body = '<html><body><span>good</span></body></html>'
+#>>> Selector(text=body).xpath('//span/text()').extract()
 
 
 
