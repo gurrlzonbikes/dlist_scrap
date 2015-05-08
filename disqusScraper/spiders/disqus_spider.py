@@ -4,6 +4,7 @@ from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.sgml import SgmlLinkExtractor
 from bs4 import BeautifulSoup
 import pdb
+import json
 from scrapy.item import Item, Field
 import re
 
@@ -54,9 +55,10 @@ class DisqusSpider(CrawlSpider):
 
     def parse_final_object(self, response):
         #Looking for <script type="text/json" id="disqus-threadData">
-        json_data = response.selector.xpath("//script[@id='disqus-threadData']").extract()
+        json_data = response.selector.xpath("//script[@id='disqus-threadData']/text()").extract()
+        #pdb.set_trace()
         item = disqusItem()
-        item['message'] = json_data
+        item['message'] = json.loads(json_data[0])
         return item
         #plus qu'a remove les balises <script> ici
 
