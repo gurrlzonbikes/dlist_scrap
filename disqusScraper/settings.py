@@ -24,7 +24,18 @@ LOG_ENABLED = True
 LOG_ENCODING = 'utf-8'
 LOG_FILE = 'spider_log.txt'
 #FEED_URI = "s3://crawler-piwik/feeds/%(name)s/%(time)s.json"
-#FEED_FORMAT = "jsonlines"
+FEED_FORMAT = "json"
+
+
+FEED_EXPORTERS_BASE = {
+    'json': 'scrapy.contrib.exporter.JsonItemExporter',
+    'jsonlines': 'scrapy.contrib.exporter.JsonLinesItemExporter',
+    'csv': 'scrapy.contrib.exporter.CsvItemExporter',
+    'xml': 'scrapy.contrib.exporter.XmlItemExporter',
+    'marshal': 'scrapy.contrib.exporter.MarshalItemExporter',
+}
+
+
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'crawler_piwik (+http://www.yourdomain.com)'
 EXTENSIONS = {

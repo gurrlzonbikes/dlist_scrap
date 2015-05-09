@@ -6,6 +6,7 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.common.action_chains import ActionChains
 import pdb
+import time
 import json
 from scrapy.item import Item, Field
 
@@ -21,7 +22,7 @@ class DisqusSpider(CrawlSpider):
         "http://dlisted.com/2015/"
     ]
     #restrict regex : [a-z0-9.-_]+\/[0-9]+\/[0-9]+\/[0-9]+\/[a-z-_]+\/$
-    rules = (Rule(LxmlLinkExtractor(), callback='parse_url', follow=True), )
+    rules = (Rule(LxmlLinkExtractor(allow="[a-z0-9.-_]+\/[0-9]+\/[0-9]+\/[0-9]+\/[a-z-_]+\/$"), callback='parse_url', follow=True), )
 
     def parse_url(self, response):
         try:
@@ -51,39 +52,37 @@ class DisqusSpider(CrawlSpider):
         #eeeeew... dirty
         #exceptions.IndexError: list index out of range
             return cleaned[0][2]
-        #pdb.set_trace()
         except:
             print response.url
 
     def parse_final_object(self, response):
         #Looking for <script type="text/json" id="disqus-threadData">
-        json_data = response.selector.xpath("//script[@id='disqus-threadData']/text()").extract()
-        #pdb.set_trace()
+        soup = self.open_with_selenium(response.url)
+        pdb.set_trace()
+        #json_data = response.selector.xpath("//script[@id='disqus-threadData']/text()").extract()
         item = disqusItem()
         #item['message'] = json.loads(json_data[0])
         item['message'] = response.url
         return item
-        #plus qu'a remove les balises <script> ici
 
     def open_with_selenium(self, url):
-        driver = webdriver.Chrome()
+        driver = webdriver.PhantomJS("/Users/Tual/PycharmProjects/disqusScraper/phantomjs-2.0.0-macosx/bin/phantomjs")
         driver.get(url)
-        test = self.click_load_more()
+        test = self.click_load_more(driver)
         pdb.set_trace()
-        driver.page_source
+        return driver.page_source
 
         #//*[@id="posts"]/div[3]/a
 
     def click_load_more(self, driver):
-        menu = driver.find_element_by_css_selector(".load-more")
-        hidden_submenu = driver.find_element_by_css_selector(".load-more .btn")
+        click_me_button= driver.find_element_by_xpath('//div[@class="load-more"]/a[@class="btn"]')
         actions = ActionChains(driver)
-        actions.move_to_element(menu)
-        actions.click(hidden_submenu)
+        actions.click(click_me_button)
         actions.perform()
-        isPresent = driver.find_element_by_xpath('//*[@id="posts"]/div[3]/a').size() > 0
-        while isPresent:
+        time.sleep(8)
+        while driver.find_element_by_xpath('//div[@class="load-more"]/a[@class="btn"]').size() > 0: #while div "load more" exists
             self.click_load_more(driver)
+        return driver.page_source
 
 
 ##Using xpath with scrapy implementation
