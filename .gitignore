@@ -52,3 +52,4 @@ spider_log.txt
 venv/
 *.json
 phantomjs-2.0.0-macosx/
+ghostdriver.log
