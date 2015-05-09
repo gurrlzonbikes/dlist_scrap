@@ -53,3 +53,4 @@ venv/
 *.json
 phantomjs-2.0.0-macosx/
 ghostdriver.log
+.DS_Store
