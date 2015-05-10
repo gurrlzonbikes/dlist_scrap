@@ -38,8 +38,10 @@ class DisqusSpider(CrawlSpider):
             pass
 
     def build_disqus_url(self, response):
-        #Complete url example:
-        #http://disqus.com/embed/comments/?base=default&version=866b57a6cbb5f3ab2a4b4f4578d489f6&f=dlisted1&t_i=177027 http://dlisted.com/?p=177027&t_u=http://dlisted.com/2015/05/07/blake-lively-is-the-latest-mumbly-actress-to-join-woody-allens-next-film/
+
+#Complete url example:
+#http://disqus.com/embed/comments/?base=default&version=866b57a6cbb5f3ab2a4b4f4578d489f6&f=dlisted1&t_i=177027 http://dlisted.com/?p=177027&t_u=http://dlisted.com/2015/05/07/blake-lively-is-the-latest-mumbly-actress-to-join-woody-allens-next-film/
+
         base_url = "http://disqus.com/embed/comments/?"
         base_default = "base=default"
         disqus_version = "&version=866b57a6cbb5f3ab2a4b4f4578d489f6"
@@ -55,19 +57,18 @@ class DisqusSpider(CrawlSpider):
         cdata_script = response.selector.xpath("/html/body/div[1]/div[1]/div/div[2]/script[1]").extract()
         try:
             cleaned = [s.split("=") for s in cdata_script[0].split(";") if "var disqus_identifier" in s]
-        #eeeeew... dirty
+
         #exceptions.IndexError: list index out of range
-            return cleaned[0][2]
+            return cleaned[0][2]#eeeeew... dirty
         except:
             print response.url
 
     def parse_final_object(self, response):
-        #Looking for <script type="text/json" id="disqus-threadData">
+
         soup = self.open_with_selenium(response.url)
-        json_data = Selector(text=soup).xpath("//script[@id='disqus-threadData']/text()").extract()
+        json_data = Selector(text=soup).xpath("//script[@id='disqus-threadData']/text()").extract()#Looking for <script type="text/json" id="disqus-threadData">
         item = disqusItem()
         item['message'] = json.loads(json_data[0])
-        #item['message'] = response.url
         return item
 
     def open_with_selenium(self, url):
@@ -78,7 +79,6 @@ class DisqusSpider(CrawlSpider):
 
         return driver.page_source
 
-        #//*[@id="posts"]/div[3]/a
 
     def click_load_more(self, driver):
         try:
@@ -86,10 +86,8 @@ class DisqusSpider(CrawlSpider):
             EC.presence_of_element_located((By.CSS_SELECTOR , '#posts > div.load-more > a'))
 
        )
-        #click_me_button= driver.find_element_by_xpath('//div[@class="load-more"]/a[@class="btn"]')
-        except:
+        except RuntimeError:
             return
-        #pdb.set_trace()
         actions = ActionChains(driver)
         actions.click(click_me_button)
         actions.perform()
@@ -97,7 +95,7 @@ class DisqusSpider(CrawlSpider):
 
             self.click_load_more(driver)
 
-        except NoSuchElementException:
-            return
+        except TimeoutException:
+            raise
 
 
