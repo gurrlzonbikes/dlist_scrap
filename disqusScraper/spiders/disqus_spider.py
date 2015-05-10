@@ -1,14 +1,20 @@
 __author__ = 'Tual'
-import scrapy
 from scrapy.contrib.spiders import CrawlSpider, Rule
 from scrapy.contrib.linkextractors.lxmlhtml import LxmlLinkExtractor
-from bs4 import BeautifulSoup
+from scrapy.item import Item, Field
+from scrapy.http import Request
 from selenium import webdriver
+from scrapy.selector import Selector
+from selenium.common.exceptions import TimeoutException
+from selenium.common.exceptions import NoSuchElementException
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import pdb
 import time
 import json
-from scrapy.item import Item, Field
+
 
 class disqusItem(Item):
     title = Field()
@@ -27,7 +33,7 @@ class DisqusSpider(CrawlSpider):
     def parse_url(self, response):
         try:
             disqus_url = self.build_disqus_url(response)
-            yield scrapy.http.Request(disqus_url, self.parse_final_object, method='GET', encoding='utf-8', priority=0, dont_filter=False)
+            yield Request(disqus_url, self.parse_final_object, method='GET', encoding='utf-8', priority=0, dont_filter=False)
         except IndexError:
             pass
 
@@ -58,34 +64,40 @@ class DisqusSpider(CrawlSpider):
     def parse_final_object(self, response):
         #Looking for <script type="text/json" id="disqus-threadData">
         soup = self.open_with_selenium(response.url)
-        pdb.set_trace()
-        #json_data = response.selector.xpath("//script[@id='disqus-threadData']/text()").extract()
+        json_data = Selector(text=soup).xpath("//script[@id='disqus-threadData']/text()").extract()
         item = disqusItem()
-        #item['message'] = json.loads(json_data[0])
-        item['message'] = response.url
+        item['message'] = json.loads(json_data[0])
+        #item['message'] = response.url
         return item
 
     def open_with_selenium(self, url):
         driver = webdriver.PhantomJS("/Users/Tual/PycharmProjects/disqusScraper/phantomjs-2.0.0-macosx/bin/phantomjs")
         driver.get(url)
-        test = self.click_load_more(driver)
-        pdb.set_trace()
+
+        self.click_load_more(driver)
+
         return driver.page_source
 
         #//*[@id="posts"]/div[3]/a
 
     def click_load_more(self, driver):
-        click_me_button= driver.find_element_by_xpath('//div[@class="load-more"]/a[@class="btn"]')
+        try:
+            click_me_button = WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR , '#posts > div.load-more > a'))
+
+       )
+        #click_me_button= driver.find_element_by_xpath('//div[@class="load-more"]/a[@class="btn"]')
+        except:
+            return
+        #pdb.set_trace()
         actions = ActionChains(driver)
         actions.click(click_me_button)
         actions.perform()
-        time.sleep(8)
-        while driver.find_element_by_xpath('//div[@class="load-more"]/a[@class="btn"]').size() > 0: #while div "load more" exists
+        try:
+
             self.click_load_more(driver)
-        return driver.page_source
+
+        except NoSuchElementException:
+            return
 
 
-##Using xpath with scrapy implementation
-
-#>>> body = '<html><body><span>good</span></body></html>'
-#>>> Selector(text=body).xpath('//span/text()').extract()
